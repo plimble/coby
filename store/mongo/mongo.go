@@ -30,7 +30,7 @@ func (s *Store) Create(id string, v interface{}) error {
 	return s.getC(session).Insert(v)
 }
 
-func (s *Store) Update(id interface{}, v interface{}) error {
+func (s *Store) Update(id string, v interface{}) error {
 	session := s.session.Clone()
 	defer session.Close()
 
