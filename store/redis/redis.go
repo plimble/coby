@@ -49,7 +49,7 @@ func (s *Store) Create(id string, v interface{}) error {
 	return nil
 }
 
-func (s *Store) Update(id interface{}, v interface{}) error {
+func (s *Store) Update(id string, v interface{}) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
