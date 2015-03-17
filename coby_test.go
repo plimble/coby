@@ -77,6 +77,21 @@ func TestCreateToken(t *testing.T) {
 	assert.Equal(t, d, v)
 }
 
+func TestCreateWithNil(t *testing.T) {
+	f := newFake(t)
+	c := NewService(f.store, f.unik, f.moment)
+
+	token := generateToken("1")
+	token.Data = "null"
+
+	f.unik.EXPECT().Generate().Return(token.ID)
+	f.moment.EXPECT().Now().Return(token.Expire)
+	f.store.On("Create", token.ID, token).Return(nil)
+
+	_, err := c.CreateToken(nil)
+	assert.NoError(t, err)
+}
+
 func TestGetToken(t *testing.T) {
 	f := newFake(t)
 	c := NewService(f.store, f.unik, f.moment)
