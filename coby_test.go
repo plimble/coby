@@ -47,7 +47,9 @@ type testData struct {
 
 func TestCreateToken(t *testing.T) {
 	f := newFake(t)
-	c := NewService(f.store, f.unik, f.moment)
+	c := NewService(f.store)
+	c.unik = f.unik
+	c.moment = f.moment
 
 	d := &testData{
 		Name:  "Tickets",
@@ -79,7 +81,9 @@ func TestCreateToken(t *testing.T) {
 
 func TestCreateWithNil(t *testing.T) {
 	f := newFake(t)
-	c := NewService(f.store, f.unik, f.moment)
+	c := NewService(f.store)
+	c.unik = f.unik
+	c.moment = f.moment
 
 	token := generateToken("1")
 	token.Data = "null"
@@ -94,7 +98,9 @@ func TestCreateWithNil(t *testing.T) {
 
 func TestGetToken(t *testing.T) {
 	f := newFake(t)
-	c := NewService(f.store, f.unik, f.moment)
+	c := NewService(f.store)
+	c.unik = f.unik
+	c.moment = f.moment
 
 	token := generateToken("1")
 	f.store.On("Get", "1").Return(token, nil)
@@ -106,7 +112,9 @@ func TestGetToken(t *testing.T) {
 
 func TestUseToken(t *testing.T) {
 	f := newFake(t)
-	c := NewService(f.store, f.unik, f.moment)
+	c := NewService(f.store)
+	c.unik = f.unik
+	c.moment = f.moment
 
 	token := generateToken("1")
 	f.store.On("Get", "1").Return(token, nil)
@@ -119,7 +127,9 @@ func TestUseToken(t *testing.T) {
 
 func TestUseTokenAlready(t *testing.T) {
 	f := newFake(t)
-	c := NewService(f.store, f.unik, f.moment)
+	c := NewService(f.store)
+	c.unik = f.unik
+	c.moment = f.moment
 
 	token := generateToken("1")
 	token.Used = true
@@ -131,7 +141,9 @@ func TestUseTokenAlready(t *testing.T) {
 
 func TestUseTokenNotFound(t *testing.T) {
 	f := newFake(t)
-	c := NewService(f.store, f.unik, f.moment)
+	c := NewService(f.store)
+	c.unik = f.unik
+	c.moment = f.moment
 
 	f.store.On("Get", "1").Return(&Token{}, errors.New("not found"))
 

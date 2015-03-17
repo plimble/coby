@@ -15,16 +15,16 @@ type Service interface {
 }
 
 type CobyService struct {
-	Store  Store
-	Unik   unik.Generator
-	Moment moment.Time
+	store  Store
+	unik   unik.Generator
+	moment moment.Time
 }
 
-func NewService(store Store, unik unik.Generator, moment moment.Time) *CobyService {
+func NewService(store Store) *CobyService {
 	return &CobyService{
-		Store:  store,
-		Unik:   unik,
-		Moment: moment,
+		store:  store,
+		unik:   unik.NewSnowflake(1),
+		moment: moment.New(),
 	}
 }
 
@@ -35,23 +35,23 @@ func (c *CobyService) CreateToken(v interface{}) (*Token, error) {
 	}
 
 	t := &Token{
-		ID:     c.Unik.Generate(),
+		ID:     c.unik.Generate(),
 		Data:   string(b),
-		Expire: c.Moment.Now(),
+		Expire: c.moment.Now(),
 		Used:   false,
 	}
 
-	err = c.Store.Create(t.ID, t)
+	err = c.store.Create(t.ID, t)
 	return t, err
 }
 
 func (c *CobyService) GetToken(tokenID string) (*Token, error) {
-	return c.Store.Get(tokenID)
+	return c.store.Get(tokenID)
 }
 
 func (c *CobyService) UseToken(tokenID string) error {
 	var token *Token
-	token, err := c.Store.Get(tokenID)
+	token, err := c.store.Get(tokenID)
 	if err != nil {
 		return err
 	}
@@ -61,5 +61,5 @@ func (c *CobyService) UseToken(tokenID string) error {
 	}
 
 	token.Used = true
-	return c.Store.Update(tokenID, token)
+	return c.store.Update(tokenID, token)
 }
