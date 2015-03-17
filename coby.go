@@ -29,20 +29,19 @@ func NewService(store Store, unik unik.Generator, moment moment.Time) *CobyServi
 }
 
 func (c *CobyService) CreateToken(v interface{}) (*Token, error) {
-	jsonStr, err := json.Marshal(v)
+	b, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
 
 	t := &Token{
 		ID:     c.Unik.Generate(),
-		Data:   string(jsonStr),
+		Data:   string(b),
 		Expire: c.Moment.Now(),
 		Used:   false,
 	}
 
-	err = c.Store.Insert(t)
-
+	err = c.Store.Create(t.ID, t)
 	return t, err
 }
 
@@ -62,5 +61,5 @@ func (c *CobyService) UseToken(tokenID string) error {
 	}
 
 	token.Used = true
-	return c.Store.Update(tokenID, map[string]interface{}{"used": true})
+	return c.Store.Update(tokenID, token)
 }

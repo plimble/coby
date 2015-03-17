@@ -56,12 +56,13 @@ func TestCreateToken(t *testing.T) {
 
 	token := generateToken("1")
 	jsonStr, err := json.Marshal(&d)
-
 	assert.NoError(t, err)
+
 	token.Data = string(jsonStr)
+
 	f.unik.EXPECT().Generate().Return(token.ID)
 	f.moment.EXPECT().Now().Return(token.Expire)
-	f.store.On("Insert", token).Return(nil)
+	f.store.On("Create", token.ID, token).Return(nil)
 
 	result, err := c.CreateToken(d)
 	assert.NoError(t, err)
@@ -94,7 +95,8 @@ func TestUseToken(t *testing.T) {
 
 	token := generateToken("1")
 	f.store.On("Get", "1").Return(token, nil)
-	f.store.On("Update", "1", map[string]interface{}{"used": true}).Return(nil)
+	token.Used = true
+	f.store.On("Update", "1", token).Return(nil)
 
 	err := c.UseToken("1")
 	assert.NoError(t, err)
