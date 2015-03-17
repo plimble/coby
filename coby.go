@@ -6,7 +6,7 @@ import (
 	"github.com/plimble/unik"
 )
 
-//go:generate mockery -file=coby_mock.go -name=Service -inpkg=false
+//go:generate mockery -name=Service -inpkg=false
 
 type Service interface {
 	CreateToken(v interface{}) (*Token, error)
