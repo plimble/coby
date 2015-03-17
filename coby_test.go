@@ -159,5 +159,47 @@ func TestTokenIsExpire(t *testing.T) {
 	token.Expire = time.Now().AddDate(1, 0, 0)
 	b = token.IsExpire()
 	assert.False(t, b)
+}
 
+func BenchmarkIsExpire(b *testing.B) {
+	b.ReportAllocs()
+	token := generateToken("1")
+	b.ResetTimer()
+
+	for n := 0; n < b.N; n++ {
+		token.IsExpire()
+	}
+}
+
+func BenchmarkCreateToken(b *testing.B) {
+	b.ReportAllocs()
+	store := &benchStore{}
+	c := NewService(store)
+	b.ResetTimer()
+
+	for n := 0; n < b.N; n++ {
+		c.CreateToken(nil)
+	}
+}
+
+func BenchmarkGetToken(b *testing.B) {
+	b.ReportAllocs()
+	store := &benchStore{}
+	c := NewService(store)
+	b.ResetTimer()
+
+	for n := 0; n < b.N; n++ {
+		c.GetToken("1")
+	}
+}
+
+func BenchmarkUseToken(b *testing.B) {
+	b.ReportAllocs()
+	store := &benchStore{}
+	c := NewService(store)
+	b.ResetTimer()
+
+	for n := 0; n < b.N; n++ {
+		c.UseToken("1")
+	}
 }
