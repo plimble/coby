@@ -29,19 +29,21 @@ func NewService(store Store) *CobyService {
 }
 
 func (c *CobyService) CreateToken(v interface{}) (*Token, error) {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-
 	t := &Token{
 		ID:     c.unik.Generate(),
-		Data:   string(b),
 		Expire: c.moment.Now(),
 		Used:   false,
 	}
 
-	err = c.store.Create(t.ID, t)
+	if v != nil {
+		b, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		t.Data = string(b)
+	}
+
+	err := c.store.Create(t.ID, t)
 	return t, err
 }
 

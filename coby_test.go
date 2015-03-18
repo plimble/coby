@@ -86,7 +86,6 @@ func TestCreateWithNil(t *testing.T) {
 	c.moment = f.moment
 
 	token := generateToken("1")
-	token.Data = "null"
 
 	f.unik.EXPECT().Generate().Return(token.ID)
 	f.moment.EXPECT().Now().Return(token.Expire)
