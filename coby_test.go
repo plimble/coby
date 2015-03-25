@@ -1,8 +1,6 @@
 package coby
 
 import (
-	"code.google.com/p/gomock/gomock"
-	"encoding/json"
 	"errors"
 	"github.com/plimble/moment/mock_moment"
 	"github.com/plimble/unik/mock_unik"
@@ -11,194 +9,150 @@ import (
 	"time"
 )
 
-type fake struct {
-	ctrl   *gomock.Controller
+type mockCoby struct {
 	store  *MockStore
 	unik   *mock_unik.MockGenerator
 	moment *mock_moment.MockTime
 }
 
-func newFake(t *testing.T) *fake {
-	ctrl := gomock.NewController(t)
+func setupCoby() (*CobyService, *mockCoby) {
 	store := NewMockStore()
-	unik := mock_unik.NewMockGenerator(ctrl)
-	moment := mock_moment.NewMockTime(ctrl)
-	return &fake{
-		ctrl:   ctrl,
-		store:  store,
-		unik:   unik,
-		moment: moment,
-	}
+	unik := mock_unik.NewMockGenerator()
+	moment := mock_moment.NewMockTime()
+	c := NewService(store, time.Second*time.Duration(30))
+	mock := &mockCoby{store, unik, moment}
+	c.unik = unik
+	c.moment = moment
+
+	return c, mock
 }
 
-func generateToken(id string) *Token {
-	return &Token{
-		ID:     id,
-		Data:   "",
-		Expire: time.Now(),
-		Used:   false,
-	}
-}
+func TestCreate(t *testing.T) {
+	s, m := setupCoby()
 
-type testData struct {
-	Name  string `json:"name"`
-	Owner string `json:"owner"`
-}
-
-func TestCreateToken(t *testing.T) {
-	f := newFake(t)
-	c := NewService(f.store)
-	c.unik = f.unik
-	c.moment = f.moment
-
-	d := &testData{
-		Name:  "Tickets",
-		Owner: "Admin",
+	expToken := &Token{
+		Token:  "123",
+		Expire: int64(100),
+		Data: map[string]interface{}{
+			"email": "test@test.com",
+		},
 	}
 
-	token := generateToken("1")
-	jsonStr, err := json.Marshal(&d)
+	m.unik.On("Generate").Return("123")
+	m.moment.On("AddNowUnix", s.expires).Return(int64(100))
+	m.store.On("Create", expToken).Return(nil)
+
+	token, err := s.Create(expToken.Data)
+	m.unik.AssertExpectations(t)
+	m.moment.AssertExpectations(t)
+	m.store.AssertExpectations(t)
 	assert.NoError(t, err)
-
-	token.Data = string(jsonStr)
-
-	f.unik.EXPECT().Generate().Return(token.ID)
-	f.moment.EXPECT().Now().Return(token.Expire)
-	f.store.On("Create", token.ID, token).Return(nil)
-
-	result, err := c.CreateToken(d)
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-
-	m, err := json.Marshal(d)
-	result.Data = string(m)
-	v := &testData{}
-	err = result.GetData(v)
-
-	assert.NoError(t, err)
-	assert.Equal(t, d, v)
+	assert.Equal(t, expToken, token)
 }
 
-func TestCreateWithNil(t *testing.T) {
-	f := newFake(t)
-	c := NewService(f.store)
-	c.unik = f.unik
-	c.moment = f.moment
+func TestVerify(t *testing.T) {
+	s, m := setupCoby()
 
-	token := generateToken("1")
-
-	f.unik.EXPECT().Generate().Return(token.ID)
-	f.moment.EXPECT().Now().Return(token.Expire)
-	f.store.On("Create", token.ID, token).Return(nil)
-
-	_, err := c.CreateToken(nil)
-	assert.NoError(t, err)
-}
-
-func TestGetToken(t *testing.T) {
-	f := newFake(t)
-	c := NewService(f.store)
-	c.unik = f.unik
-	c.moment = f.moment
-
-	token := generateToken("1")
-	f.store.On("Get", "1").Return(token, nil)
-
-	result, err := c.GetToken("1")
-	assert.NoError(t, err)
-	assert.Equal(t, result, token)
-}
-
-func TestUseToken(t *testing.T) {
-	f := newFake(t)
-	c := NewService(f.store)
-	c.unik = f.unik
-	c.moment = f.moment
-
-	token := generateToken("1")
-	f.store.On("Get", "1").Return(token, nil)
-	token.Used = true
-	f.store.On("Update", "1", token).Return(nil)
-
-	err := c.UseToken("1")
-	assert.NoError(t, err)
-}
-
-func TestUseTokenAlready(t *testing.T) {
-	f := newFake(t)
-	c := NewService(f.store)
-	c.unik = f.unik
-	c.moment = f.moment
-
-	token := generateToken("1")
-	token.Used = true
-	f.store.On("Get", "1").Return(token, nil)
-
-	err := c.UseToken("1")
-	assert.NoError(t, err)
-}
-
-func TestUseTokenNotFound(t *testing.T) {
-	f := newFake(t)
-	c := NewService(f.store)
-	c.unik = f.unik
-	c.moment = f.moment
-
-	f.store.On("Get", "1").Return(&Token{}, errors.New("not found"))
-
-	err := c.UseToken("1")
-	assert.Error(t, err)
-}
-
-func TestTokenIsExpire(t *testing.T) {
-	token := generateToken("1")
-	b := token.IsExpire()
-	assert.True(t, b)
-
-	token.Expire = time.Now().AddDate(1, 0, 0)
-	b = token.IsExpire()
-	assert.False(t, b)
-}
-
-func BenchmarkIsExpire(b *testing.B) {
-	b.ReportAllocs()
-	token := generateToken("1")
-	b.ResetTimer()
-
-	for n := 0; n < b.N; n++ {
-		token.IsExpire()
+	expToken := &Token{
+		Token:  "123",
+		Expire: time.Now().UTC().Add(time.Second * 20).Unix(),
+		Data: map[string]interface{}{
+			"email": "test@test.com",
+		},
 	}
+
+	m.store.On("Get", expToken.Token).Return(expToken, nil)
+	m.moment.On("IsExpireUnix", expToken.Expire).Return(false)
+
+	token, err := s.Verify(expToken.Token)
+	m.moment.AssertExpectations(t)
+	m.store.AssertExpectations(t)
+	assert.NoError(t, err)
+	assert.Equal(t, expToken, token)
 }
 
-func BenchmarkCreateToken(b *testing.B) {
-	b.ReportAllocs()
+func TestVerify_Expired(t *testing.T) {
+	s, m := setupCoby()
+
+	expToken := &Token{
+		Token:  "123",
+		Expire: time.Now().UTC().Add(time.Second * -20).Unix(),
+		Data: map[string]interface{}{
+			"email": "test@test.com",
+		},
+	}
+
+	m.store.On("Get", expToken.Token).Return(expToken, nil)
+	m.moment.On("IsExpireUnix", expToken.Expire).Return(true)
+
+	token, err := s.Verify(expToken.Token)
+	m.store.AssertExpectations(t)
+	assert.Equal(t, err, errTokenExpired)
+	assert.Nil(t, token)
+}
+
+func TestVerify_NotFound(t *testing.T) {
+	s, m := setupCoby()
+
+	expToken := &Token{
+		Token:  "123",
+		Expire: time.Now().UTC().Add(time.Second * -20).Unix(),
+		Data: map[string]interface{}{
+			"email": "test@test.com",
+		},
+	}
+
+	m.store.On("Get", expToken.Token).Return(nil, errors.New("error"))
+
+	token, err := s.Verify(expToken.Token)
+	m.store.AssertExpectations(t)
+	assert.Equal(t, err, errInvalidToken)
+	assert.Nil(t, token)
+}
+
+func TestDelete(t *testing.T) {
+	s, m := setupCoby()
+
+	m.store.On("Delete", "123").Return(nil)
+
+	err := s.Delete("123")
+	assert.NoError(t, err)
+}
+
+func BenchmarkCreate(b *testing.B) {
 	store := &benchStore{}
-	c := NewService(store)
+	c := NewService(store, time.Second*30)
+	b.ReportAllocs()
 	b.ResetTimer()
 
+	data := map[string]interface{}{
+		"name": "123",
+		"pass": "321",
+	}
+
 	for n := 0; n < b.N; n++ {
-		c.CreateToken(nil)
+		c.Create(data)
 	}
 }
 
-func BenchmarkGetToken(b *testing.B) {
-	b.ReportAllocs()
+func BenchmarkVerify(b *testing.B) {
 	store := &benchStore{}
-	c := NewService(store)
+	c := NewService(store, time.Second*30)
+	b.ReportAllocs()
 	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {
-		c.GetToken("1")
+		c.Verify("123")
 	}
 }
 
-func BenchmarkUseToken(b *testing.B) {
-	b.ReportAllocs()
+func BenchmarkDelete(b *testing.B) {
 	store := &benchStore{}
-	c := NewService(store)
+	c := NewService(store, time.Second*30)
+	b.ReportAllocs()
 	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {
-		c.UseToken("1")
+		c.Delete("123")
 	}
 }

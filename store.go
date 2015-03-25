@@ -1,9 +1,9 @@
 package coby
 
-//go:generate mockery -file=store_mock.go -name=Store -inpkg
+//go:generate mockery -name=Store -inpkg
 
 type Store interface {
-	Create(id string, v interface{}) error
-	Update(id string, v interface{}) error
-	Get(tokenID string) (*Token, error)
+	Create(token *Token) error
+	Delete(token string) error
+	Get(token string) (*Token, error)
 }

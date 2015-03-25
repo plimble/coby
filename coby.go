@@ -1,67 +1,59 @@
 package coby
 
 import (
-	"encoding/json"
 	"github.com/plimble/moment"
 	"github.com/plimble/unik"
+	"time"
 )
 
-//go:generate mockery -name=Service -inpkg=false
+//go:generate mockery -name=Service
 
 type Service interface {
-	CreateToken(v interface{}) (*Token, error)
-	GetToken(tokenID string) (*Token, error)
-	UseToken(tokenID string) error
+	Create(v interface{}) (*Token, error)
+	Verify(token string) (*Token, error)
+	Delete(tokenID string) error
 }
 
 type CobyService struct {
-	store  Store
-	unik   unik.Generator
-	moment moment.Time
+	store   Store
+	unik    unik.Generator
+	moment  moment.Time
+	expires time.Duration
 }
 
-func NewService(store Store) *CobyService {
+func NewService(store Store, expires time.Duration) *CobyService {
 	return &CobyService{
-		store:  store,
-		unik:   unik.NewSnowflake(1),
-		moment: moment.New(),
+		store:   store,
+		unik:    unik.NewBSON(),
+		moment:  moment.New(),
+		expires: expires,
 	}
 }
 
-func (c *CobyService) CreateToken(v interface{}) (*Token, error) {
+func (c *CobyService) Create(v map[string]interface{}) (*Token, error) {
 	t := &Token{
-		ID:     c.unik.Generate(),
-		Expire: c.moment.Now(),
-		Used:   false,
+		Token:  c.unik.Generate(),
+		Expire: c.moment.AddNowUnix(c.expires),
+		Data:   v,
 	}
 
-	if v != nil {
-		b, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-		t.Data = string(b)
-	}
-
-	err := c.store.Create(t.ID, t)
+	err := c.store.Create(t)
 	return t, err
 }
 
-func (c *CobyService) GetToken(tokenID string) (*Token, error) {
-	return c.store.Get(tokenID)
+func (c *CobyService) Verify(token string) (*Token, error) {
+	t, err := c.store.Get(token)
+	if err != nil {
+		return nil, errInvalidToken
+	}
+
+	if c.moment.IsExpireUnix(t.Expire) {
+		return nil, errTokenExpired
+	}
+
+	return t, nil
 }
 
-func (c *CobyService) UseToken(tokenID string) error {
-	var token *Token
-	token, err := c.store.Get(tokenID)
-	if err != nil {
-		return err
-	}
-
-	if token.Used == true {
-		return nil
-	}
-
-	token.Used = true
-	return c.store.Update(tokenID, token)
+func (c *CobyService) Delete(token string) error {
+	return c.store.Delete(token)
 }
