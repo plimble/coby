@@ -1,8 +1,8 @@
 package mongo
 
 import (
-	"bitbucket.org/plimble/coby"
 	"encoding/json"
+	"github.com/plimble/coby"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2"
 	"os"

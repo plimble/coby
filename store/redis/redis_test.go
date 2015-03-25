@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"bitbucket.org/plimble/coby"
+	"github.com/plimble/coby"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"

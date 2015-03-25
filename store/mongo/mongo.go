@@ -1,7 +1,7 @@
 package mongo
 
 import (
-	"bitbucket.org/plimble/coby"
+	"github.com/plimble/coby"
 	"gopkg.in/mgo.v2"
 )
 
@@ -23,18 +23,18 @@ func (s *Store) getC(session *mgo.Session) *mgo.Collection {
 	return session.DB(s.db).C(s.c)
 }
 
-func (s *Store) Create(id string, v interface{}) error {
+func (s *Store) Create(token *coby.Token) error {
 	session := s.session.Clone()
 	defer session.Close()
 
-	return s.getC(session).Insert(v)
+	return s.getC(session).Insert(token)
 }
 
-func (s *Store) Update(id string, v interface{}) error {
+func (s *Store) Delete(id string) error {
 	session := s.session.Clone()
 	defer session.Close()
 
-	return s.getC(session).UpdateId(id, v)
+	return s.getC(session).RemoveId(id)
 }
 
 func (s *Store) Get(tokenID string) (*coby.Token, error) {
