@@ -46,18 +46,15 @@ func (s *Store) Create(token *coby.Token) error {
 	if _, err := s.getC().Do("SET", token.Token, string(b)); err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (s *Store) Delete(id string) error {
-	b, err := json.Marshal(v)
-	if err != nil {
+	if _, err := s.getC().Do("DEL", id); err != nil {
 		return err
 	}
 
-	if _, err = s.getC().Do("SET", id, string(b)); err != nil {
-		return err
-	}
 	return nil
 }
 
