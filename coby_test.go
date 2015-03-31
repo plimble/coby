@@ -33,8 +33,8 @@ func TestCreate(t *testing.T) {
 	expToken := &Token{
 		Token:  "123",
 		Expire: int64(100),
-		Data: map[string]interface{}{
-			"email": "test@test.com",
+		Data: []string{
+			"test@test.com",
 		},
 	}
 
@@ -56,8 +56,8 @@ func TestVerify(t *testing.T) {
 	expToken := &Token{
 		Token:  "123",
 		Expire: time.Now().UTC().Add(time.Second * 20).Unix(),
-		Data: map[string]interface{}{
-			"email": "test@test.com",
+		Data: []string{
+			"test@test.com",
 		},
 	}
 
@@ -77,8 +77,8 @@ func TestVerify_Expired(t *testing.T) {
 	expToken := &Token{
 		Token:  "123",
 		Expire: time.Now().UTC().Add(time.Second * -20).Unix(),
-		Data: map[string]interface{}{
-			"email": "test@test.com",
+		Data: []string{
+			"test@test.com",
 		},
 	}
 
@@ -97,8 +97,8 @@ func TestVerify_NotFound(t *testing.T) {
 	expToken := &Token{
 		Token:  "123",
 		Expire: time.Now().UTC().Add(time.Second * -20).Unix(),
-		Data: map[string]interface{}{
-			"email": "test@test.com",
+		Data: []string{
+			"test@test.com",
 		},
 	}
 
@@ -125,9 +125,10 @@ func BenchmarkCreate(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	data := map[string]interface{}{
-		"name": "123",
-		"pass": "321",
+	data := []string{
+		"test@test.com",
+		"123",
+		"321",
 	}
 
 	for n := 0; n < b.N; n++ {

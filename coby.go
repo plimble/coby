@@ -9,7 +9,7 @@ import (
 //go:generate mockery -name=Service
 
 type Service interface {
-	Create(v map[string]interface{}) (*Token, error)
+	Create(v []string) (*Token, error)
 	Verify(token string) (*Token, error)
 	Delete(tokenID string) error
 }
@@ -30,7 +30,7 @@ func NewService(store Store, expires time.Duration) *CobyService {
 	}
 }
 
-func (c *CobyService) Create(v map[string]interface{}) (*Token, error) {
+func (c *CobyService) Create(v []string) (*Token, error) {
 	t := &Token{
 		Token:  c.unik.Generate(),
 		Expire: c.moment.AddNowUnix(c.expires),
