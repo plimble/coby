@@ -27,10 +27,7 @@ func (m *MockStore) Delete(token string) error {
 func (m *MockStore) Get(token string) (*Token, error) {
 	ret := m.Called(token)
 
-	var r0 *Token
-	if ret.Get(0) != nil {
-		r0 = ret.Get(0).(*Token)
-	}
+	r0 := ret.Get(0).(*Token)
 	r1 := ret.Error(1)
 
 	return r0, r1
