@@ -1,6 +1,7 @@
 package coby
 
 import (
+	"fmt"
 	"github.com/plimble/moment"
 	"github.com/plimble/unik"
 	"time"
@@ -22,6 +23,7 @@ type CobyService struct {
 }
 
 func NewService(store Store, expires time.Duration) *CobyService {
+	fmt.Println("wqewqe")
 	return &CobyService{
 		store:   store,
 		unik:    unik.NewBSON(),
