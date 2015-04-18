@@ -2,16 +2,16 @@ package aerospike
 
 import (
 	"github.com/aerospike/aerospike-client-go"
+	"github.com/plimble/aerosingle"
 	"github.com/plimble/coby"
-	"github.com/plimble/utils/assingle"
 )
 
 type Store struct {
-	as *assingle.ASSingle
+	as *aerosingle.Client
 }
 
-func NewStore(asClient *aerospike.Client, ns string) *Store {
-	return &Store{assingle.New(asClient, ns)}
+func NewStore(asClient *aerosingle.Client) *Store {
+	return &Store{asClient}
 }
 
 func (s *Store) Create(token *coby.Token) error {
