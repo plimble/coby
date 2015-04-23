@@ -18,7 +18,7 @@ func (s *Store) Create(token *coby.Token) error {
 	policy := aerospike.NewWritePolicy(0, 0)
 	policy.RecordExistsAction = aerospike.CREATE_ONLY
 
-	return s.as.Put(policy, "coby", token.Token, token)
+	return s.as.PutMsgPack(policy, "coby", token.Token, token)
 }
 
 func (s *Store) Delete(id string) error {
@@ -28,7 +28,7 @@ func (s *Store) Delete(id string) error {
 func (s *Store) Get(tokenID string) (*coby.Token, error) {
 	var t coby.Token
 
-	err := s.as.Get(nil, "coby", tokenID, &t)
+	err := s.as.GetMsgPack(nil, "coby", tokenID, &t)
 
 	return &t, err
 }
