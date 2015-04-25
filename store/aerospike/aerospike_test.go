@@ -4,6 +4,7 @@ import (
 	"github.com/plimble/aero"
 	"github.com/plimble/coby"
 	"github.com/plimble/rand"
+	"github.com/plimble/utils/env"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -26,7 +27,7 @@ func genToken() *coby.Token {
 }
 
 func (t *StoreSuite) SetupSuite() {
-	t.s = NewStore(aero.NewClient("192.168.99.112", 3000), "test")
+	t.s = NewStore(aero.NewClient(env.String("AS_HOST", "192.168.99.100"), 3000), "test")
 }
 
 func (t *StoreSuite) TestCrud() {
