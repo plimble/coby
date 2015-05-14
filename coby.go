@@ -3,6 +3,7 @@ package coby
 import (
 	"github.com/plimble/moment"
 	"github.com/plimble/unik"
+	"github.com/plimble/unik/uuid"
 	"time"
 )
 
@@ -24,7 +25,7 @@ type CobyService struct {
 func NewService(store Store, expires time.Duration) *CobyService {
 	return &CobyService{
 		store:   store,
-		unik:    unik.NewBSON(),
+		unik:    uuid.NewV1(),
 		moment:  moment.New(),
 		expires: expires,
 	}
